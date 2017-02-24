@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+ruby '2.4.0'
+
+gem 'facebook-messenger'
+gem 'wit'
+gem 'sinatra'
+gem 'thin'
