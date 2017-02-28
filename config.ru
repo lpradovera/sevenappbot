@@ -1,4 +1,4 @@
 require 'facebook/messenger'
-require_relative 'bot'
+require_relative 'app'
 
 run Facebook::Messenger::Server
