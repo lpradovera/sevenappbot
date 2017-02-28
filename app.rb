@@ -4,10 +4,10 @@ include Facebook::Messenger
 
 class BotLogic
   def self.send_message(recipient, message)
-    Bot.deliver(
+    Bot.deliver({
       recipient: recipient,
       message: message
-    ), access_token: ENV['ACCESS_TOKEN'])
+    }, access_token: ENV['ACCESS_TOKEN'])
   end
 
   def self.text_only_message(recipient, text_message)
