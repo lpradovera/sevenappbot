@@ -1,11 +1,16 @@
+GIT
+  remote: git://github.com/hyperoslo/facebook-messenger.git
+  revision: 6246583293969fa59174b6e2814d307567b12b0c
+  specs:
+    facebook-messenger (0.11.1)
+      httparty (~> 0.13, >= 0.13.7)
+      rack (>= 1.6.4)
+
 GEM
   remote: https://rubygems.org/
   specs:
     daemons (1.2.4)
     eventmachine (1.2.3)
-    facebook-messenger (0.11.1)
-      httparty (~> 0.13, >= 0.13.7)
-      rack (>= 1.6.4)
     httparty (0.14.0)
       multi_xml (>= 0.5.2)
     multi_xml (0.6.0)
@@ -20,7 +25,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  facebook-messenger
+  facebook-messenger!
   thin
   wit
 
