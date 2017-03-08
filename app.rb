@@ -1,12 +1,10 @@
 require 'facebook/messenger'
-require 'singleton'
 require 'sinatra'
 require_relative './bot_logic'
 
 $stdout.sync = true
 
 include Facebook::Messenger
-
 
 Bot.on :message do |message|
   puts message.inspect

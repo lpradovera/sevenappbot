@@ -1,5 +1,6 @@
 require 'sendgrid-ruby'
 require 'pp'
+require 'singleton'
 class BotLogic
   include Singleton
   include SendGrid
@@ -17,7 +18,7 @@ class BotLogic
   def handle_message_action(session, message)
     puts message.inspect
     puts session.inspect
-    if %i{greeting web_or_app web app web_choice app_choice budget budget_choice email_request email_input}.include?(session[:step])
+    if %i{greeting greeting_choice web_or_app_choice web_or_app web app web_choice app_choice budget budget_choice email_request email_input}.include?(session[:step])
       puts "Executing #{session[:step]}"
       self.send("handle_#{session[:step]}".to_sym, session, message)
     else
@@ -26,8 +27,36 @@ class BotLogic
   end
 
   def handle_greeting(session, message)
+    set_call_to_action
     message.reply(text: 'Ciao! Sono il bot di 7App.')
     message.reply(text: 'Siamo specializzati nello sviluppo di applicazioni mobile native (iOS e Android ) e nella realizzazione di piattaforme web responsive.')
+    message.reply(
+      text: 'Sei...',
+      quick_replies: [
+        {
+          content_type: 'text',
+          title: 'Azienda',
+          payload: 'AZIENDA'
+        },
+        {
+          content_type: 'text',
+          title: "Privato",
+          payload: 'PRIVATO'
+        }
+      ]
+    )
+    session[:step] = :greeting_choice
+  end
+
+
+  def handle_greeting_choice(session, message)
+    session[:type] = message.quick_reply
+    session[:step] = :web_or_app_choice
+    handle_message_action(session, message)
+  end
+
+
+  def handle_web_or_app_choice(session, message)
     message.reply(
       text: 'Come posso aiutarti? Hai bisogno di...',
       quick_replies: [
@@ -196,6 +225,9 @@ class BotLogic
 
   def generic_error(session, message)
     message.reply(text: 'Scusami! Non ho capito.')
+  end
+
+  def set_call_to_action
   end
 
   def find_session(id)
