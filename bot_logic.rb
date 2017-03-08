@@ -303,7 +303,7 @@ class BotLogic
 
   def subscribe_mailing_list(session)
     gibbon = Gibbon::Request.new(api_key: ENV['MAILCHIMP_API_KEY'], debug: true)
-    puts gibbon.lists(ENV['MAILCHIMP_LIST_ID']).members.create(body: {email_address: session[:email], status: "subscribed"})
+    puts gibbon.lists(ENV['MAILCHIMP_LIST_ID']).members.create(body: {email_address: session[:email], status: "subscribed"}) rescue nil
   end
 
   def send_email(session, email)
@@ -313,10 +313,19 @@ class BotLogic
     content = Content.new(type: 'text/plain', value: format_message(session))
     mail = Mail.new(from, subject, to, content)
 
-    puts "Sending #{mail.to_json}"
+    from = Email.new(email: 'biz@7app.it')
+    subject = '7App Facebook Bot'
+    to = Email.new(email: session[:email])
+    content = Content.new(type: 'text/plain', value: format_user_message(session))
+    user_mail = Mail.new(from, subject, to, content)
 
     sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
+
+    puts "Sending #{mail.to_json}"
     response = sg.client.mail._('send').post(request_body: mail.to_json)
+
+    puts "Sending #{user_mail.to_json}"
+    response = sg.client.mail._('send').post(request_body: user_mail.to_json)
   end
 
   def format_message(session)
@@ -326,6 +335,32 @@ class BotLogic
       Richiesta: #{session[:path]}
       Tipo: #{session[:choice]}
       Budget: #{session[:budget]}
+    HERE
+  end
+
+  def format_user_message(session)
+    <<~HERE
+      Ti ringraziamo per aver contattato 7App.
+
+      Puoi scaricare la nostra corporate brochure al seguente indirizzo: https://goo.gl/alBwUn
+
+      La tua richiesta:
+
+      Email: #{session[:email]}
+
+      Telefono: #{session[:phone]}
+
+      Richiesta: #{session[:path]}
+
+      Tipo: #{session[:choice]}
+
+      Budget: #{session[:budget]}
+
+      Cordiali saluti,
+
+      7App
+
+      https://www.7app.it/
     HERE
   end
 
