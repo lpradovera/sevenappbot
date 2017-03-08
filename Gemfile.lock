@@ -11,9 +11,16 @@ GEM
   specs:
     daemons (1.2.4)
     eventmachine (1.2.3)
+    faraday (0.11.0)
+      multipart-post (>= 1.2, < 3)
+    gibbon (3.0.1)
+      faraday (>= 0.9.1)
+      multi_json (>= 1.11.0)
     httparty (0.14.0)
       multi_xml (>= 0.5.2)
+    multi_json (1.12.1)
     multi_xml (0.6.0)
+    multipart-post (2.0.0)
     rack (1.6.5)
     rack-protection (1.5.3)
       rack
@@ -37,6 +44,7 @@ PLATFORMS
 
 DEPENDENCIES
   facebook-messenger!
+  gibbon
   rake
   sendgrid-ruby
   sinatra

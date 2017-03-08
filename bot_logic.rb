@@ -1,6 +1,8 @@
 require 'sendgrid-ruby'
 require 'pp'
 require 'singleton'
+require 'gibbon'
+
 class BotLogic
   include Singleton
   include SendGrid
@@ -18,7 +20,7 @@ class BotLogic
   def handle_message_action(session, message)
     puts message.inspect
     puts session.inspect
-    if %i{greeting greeting_choice web_or_app_choice web_or_app web app web_choice app_choice budget budget_choice email_request email_input}.include?(session[:step])
+    if %i{greeting greeting_choice web_or_app_choice web_or_app web app altro altro_response web_choice app_choice budget budget_choice email_request email_input phone_yesno phone_choice phone_request phone_input mailing_choice mailing_yesno}.include?(session[:step])
       puts "Executing #{session[:step]}"
       self.send("handle_#{session[:step]}".to_sym, session, message)
     else
@@ -69,6 +71,11 @@ class BotLogic
           content_type: 'text',
           title: "Un'app?",
           payload: 'APP'
+        },
+        {
+          content_type: 'text',
+          title: "Altro",
+          payload: 'ALTRO'
         }
       ]
     )
@@ -84,11 +91,26 @@ class BotLogic
       session[:path] = 'app'
       session[:step] = :app
       handle_message_action(session, message)
+    elsif message.quick_reply == 'ALTRO'
+      session[:path] = 'altro'
+      session[:step] = :altro
+      handle_message_action(session, message)
     else
       generic_error(session, message)
       session[:step] = :greeting
       handle_greeting(session, message)
     end
+  end
+
+  def handle_altro(session, message)
+    message.reply(text: 'Bene! Puoi spiegarci cosa ti serve?')
+    session[:step] = :altro_response
+  end
+
+  def handle_altro_response(session, message)
+    session[:choice] = message.text
+    session[:step] = :email_request
+    handle_message_action(session, message)
   end
 
   def web_message(message)
@@ -156,8 +178,8 @@ class BotLogic
       quick_replies: [
         {
           content_type: 'text',
-          title: '5.000',
-          payload: '5000'
+          title: session[:type] == 'AZIENDA' ? '5.000' : '3.000',
+          payload:  session[:type] == 'AZIENDA' ? '5000' : '3000',
         },
         {
           content_type: 'text',
@@ -190,15 +212,98 @@ class BotLogic
     if validate_email(email)
       session[:email] = email
       send_email(session, email)
-      message.reply(text: 'Riceverai la nostra corporate brochure a questo indirizzo email (ripetete) e ti chiamerò personalmente nei prossimi giorni. Grazie!')
-      session[:step] = :greeting
+      message.reply(text: 'Riceverai la nostra corporate brochure a questo indirizzo email. Grazie!')
+      session[:step] = :mailing_yesno
+      handle_message_action(session, message)
     else
       message.reply(text: "Mi dispiace, l'email inserita non è valida.")
     end
   end
 
+  def handle_mailing_yesno(session, message)
+    message.reply(
+      text: 'Desideri iscriverti alla nostra newsletter?',
+      quick_replies: [
+        {
+          content_type: 'text',
+          title: 'Sì',
+          payload: 'SI'
+        },
+        {
+          content_type: 'text',
+          title: "No",
+          payload: 'NO'
+        }
+      ]
+    )
+    session[:step] = :mailing_choice
+  end
+
+  def handle_mailing_choice(session, message)
+    if message.quick_reply == 'SI'
+      message.reply(text: 'Grazie!')
+      session[:subscribe_ml] = true
+      subscribe_mailing_list(session)
+    end
+    session[:step] = :phone_yesno
+    handle_message_action(session, message)
+  end
+
+  def handle_phone_yesno(session, message)
+    message.reply(
+      text: 'Preferisci essere contattato telefonicamente?',
+      quick_replies: [
+        {
+          content_type: 'text',
+          title: 'Sì',
+          payload: 'SI'
+        },
+        {
+          content_type: 'text',
+          title: "No",
+          payload: 'NO'
+        }
+      ]
+    )
+    session[:step] = :phone_choice
+  end
+
+  def handle_phone_choice(session, message)
+    if message.quick_reply == 'SI'
+      session[:step] = :phone_request
+      handle_message_action(session, message)
+    else
+      end_conversation(session, message)
+    end
+  end
+
+  def handle_phone_request(session, message)
+    session[:step] = :phone_input
+    message.reply(text: 'Inserisci di seguito il tuo numero.')
+  end
+
+  def handle_phone_input(session, message)
+    phone = message.text
+    if validate_phone(phone)
+      message.reply(text: 'Ti chiamerò personalmente nei prossimi giorni. Grazie!')
+      session[:phone] = phone
+      end_conversation(session, message)
+    else
+      message.reply(text: "Mi dispiace, l'email inserita non è valida.")
+    end
+  end
+
+  def validate_phone(phone)
+    !!phone.to_s.match(/^\A[0|3]{1}[0-9]{5,10}\Z/)
+  end
+
   def validate_email(email)
     !!email.to_s.match(/\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/)
+  end
+
+  def subscribe_mailing_list(session)
+    gibbon = Gibbon::Request.new(api_key: ENV['MAILCHIMP_API_KEY'], debug: true)
+    puts gibbon.lists(ENV['MAILCHIMP_LIST_ID']).members.create(body: {email_address: session[:email], status: "subscribed"})
   end
 
   def send_email(session, email)
@@ -217,10 +322,16 @@ class BotLogic
   def format_message(session)
     <<~HERE
       Email: #{session[:email]}
+      Telefono: #{session[:phone]}
       Richiesta: #{session[:path]}
       Tipo: #{session[:choice]}
       Budget: #{session[:budget]}
     HERE
+  end
+
+  def end_conversation(session, message)
+    message.reply(text: "Grazie dallo staff 7App!")
+    session[:step] = :greeting
   end
 
   def generic_error(session, message)
