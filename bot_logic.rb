@@ -178,17 +178,17 @@ class BotLogic
       quick_replies: [
         {
           content_type: 'text',
-          title: session[:type] == 'AZIENDA' ? '5.000' : '3.000',
+          title: session[:type] == 'AZIENDA' ? '5.000 €' : '3.000 €',
           payload:  session[:type] == 'AZIENDA' ? '5000' : '3000',
         },
         {
           content_type: 'text',
-          title: '10.000',
+          title: '10.000 €',
           payload: '10000'
         },
         {
           content_type: 'text',
-          title: '20.000+',
+          title: '20.000+ €',
           payload: '20000'
         }
       ]
