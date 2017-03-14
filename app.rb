@@ -15,3 +15,7 @@ end
 get '/sessions' do
   BotLogic.instance.sessions.inspect
 end
+
+get '/button' do
+  erb :button
+end
