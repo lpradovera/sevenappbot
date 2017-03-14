@@ -289,7 +289,7 @@ class BotLogic
       session[:phone] = phone
       end_conversation(session, message)
     else
-      message.reply(text: "Mi dispiace, l'email inserita non è valida.")
+      message.reply(text: "Mi dispiace, il numero inserito non è valido.")
     end
   end
 

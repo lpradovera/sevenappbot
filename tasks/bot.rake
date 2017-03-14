@@ -8,8 +8,8 @@ task :set_cta do
     call_to_actions: [
       {
         type: 'web_url',
-        title: 'Sito web',
-        url: 'http://7app.it/'
+        title: 'Sito web 7App,it',
+        url: 'http://www.7app.it/'
       }
     ]
   }, access_token: ENV['ACCESS_TOKEN'])
