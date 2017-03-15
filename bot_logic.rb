@@ -27,7 +27,7 @@ class BotLogic
   def handle_message_action(session, message)
     puts message.inspect
     puts session.inspect
-    if %i{greeting greeting_choice web_or_app_choice web_or_app web app altro altro_response web_choice app_choice budget budget_choice email_request email_input phone_yesno phone_choice phone_request phone_input mailing_choice mailing_yesno}.include?(session[:step])
+    if %i{greeting greeting_choice web_or_app_choice web_or_app web app altro altro_response web_choice app_choice budget budget_choice email_yesno email_choice email_request email_input phone_yesno phone_choice phone_request phone_input mailing_choice mailing_yesno}.include?(session[:step])
       puts "Executing #{session[:step]}"
       self.send("handle_#{session[:step]}".to_sym, session, message)
     else
@@ -115,7 +115,7 @@ class BotLogic
 
   def handle_altro_response(session, message)
     session[:choice] = message.text
-    session[:step] = :email_request
+    session[:step] = :email_yesno
     handle_message_action(session, message)
   end
 
@@ -204,8 +204,37 @@ class BotLogic
 
   def handle_budget_choice(session, message)
     session[:budget] = message.quick_reply
-    session[:step] = :email_request
+    session[:step] = :email_yesno
     handle_message_action(session, message)
+  end
+
+  def handle_email_yesno(session, message)
+    message.reply(
+      text: 'Vuoi essere contattato via email?',
+      quick_replies: [
+        {
+          content_type: 'text',
+          title: 'Sì',
+          payload: 'SI'
+        },
+        {
+          content_type: 'text',
+          title: "No",
+          payload: 'NO'
+        }
+      ]
+    )
+    session[:step] = :email_choice
+  end
+
+  def handle_email_choice(session, message)
+    if message.quick_reply == 'SI'
+      session[:step] = :email_request
+      handle_message_action(session, message)
+    else
+      session[:step] = :phone_yesno
+      handle_message_action(session, message)
+    end
   end
 
   def handle_email_request(session, message)
@@ -371,7 +400,11 @@ class BotLogic
   end
 
   def end_conversation(session, message)
-    message.reply(text: "Grazie dallo staff 7App!")
+    if !session[:email] && !session[:phone]
+      message.reply(text: "Grazie dallo staff 7App! Non ci hai fornito nessun metodo per contattarti, per cui ti chiediamo di scrivere a biz@7app.it.")
+    else
+      message.reply(text: "Grazie dallo staff 7App!")
+    end
     session[:step] = :greeting
   end
 
