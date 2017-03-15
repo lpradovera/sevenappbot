@@ -17,6 +17,13 @@ class BotLogic
     handle_message_action(session, message)
   end
 
+  def handle_message_reset(message)
+    puts "RESTARTING SESSION ON POSTBACK"
+    session = find_session message.sender['id']
+    session[:step] = :greeting
+    handle_message_action(session, message)
+  end
+
   def handle_message_action(session, message)
     puts message.inspect
     puts session.inspect

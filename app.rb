@@ -15,6 +15,9 @@ end
 Bot.on :postback do |message|
   puts message.inspect
 
+  if message.payload == 'RICHIEDI PREVENTIVO'
+    BotLogic.instance.handle_message_reset message
+  end
 end
 
 get '/sessions' do
