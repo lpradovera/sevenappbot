@@ -12,6 +12,11 @@ Bot.on :message do |message|
   BotLogic.instance.handle_message message
 end
 
+Bot.on :postback do |message|
+  puts message.inspect
+
+end
+
 get '/sessions' do
   BotLogic.instance.sessions.inspect
 end

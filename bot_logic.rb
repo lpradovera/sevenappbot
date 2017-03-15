@@ -31,7 +31,6 @@ class BotLogic
   def handle_greeting(session, message)
     set_call_to_action
     message.reply(text: 'Ciao! Sono il bot di 7App.')
-    message.reply(text: 'Siamo specializzati nello sviluppo di applicazioni mobile native (iOS e Android ) e nella realizzazione di piattaforme web responsive.')
     message.reply(
       text: 'Sei...',
       quick_replies: [
